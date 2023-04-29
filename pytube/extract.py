@@ -180,7 +180,7 @@ def channel_name(url: str) -> str:
         r"(?:\/(u)\/([%\d\w_\-]+)(\/.*)?)",
         r"(?:\/(user)\/([%\w\d_\-]+)(\/.*)?)",
         r"(?:\/(\@)([%\d\w_\-\.]+)(\/.*)?)",
-        r"(?:youtube\.com\/(?!\@)([a-zA-Z0-9_\-]+))"  # New pattern for youtube.com/joerogan
+        r"(?:youtube\.com\/(?!\@)(?P<simple_uri>[a-zA-Z0-9_\-]+))"  # Updated pattern for youtube.com/joerogan
     ]
 
     for pattern in patterns:
@@ -189,7 +189,7 @@ def channel_name(url: str) -> str:
         if function_match:
             logger.debug("finished regex search, matched: %s", pattern)
             uri_style = function_match.group(1)
-            uri_identifier = function_match.group(2)
+            uri_identifier = function_match.group(2) if uri_style else function_match.group("simple_uri")
             if uri_style == None:
                 return f'/@{uri_identifier}'  # Prepend '@' for youtube.com/joerogan case
             else:

@@ -160,8 +160,7 @@ def channel_name(url: str) -> str:
     - :samp:`https://youtube.com/channel/{channel_id}/*
     - :samp:`https://youtube.com/u/{channel_name}/*`
     - :samp:`https://youtube.com/user/{channel_id}/*
-    - :samp:`https://youtube.com/@{channel_name}/*
-    - :samp:`https://youtube.com/{channel_name}/*
+    - :samp:`https://youtube.com/@{channel_id}/*
 
     :param str url:
         A YouTube url containing a channel name.
@@ -173,26 +172,25 @@ def channel_name(url: str) -> str:
     # Add 'https://' to the URL if it doesn't have 'http://' or 'https://'
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
-
     patterns = [
         r"(?:\/(c)\/([%\d\w_\-]+)(\/.*)?)",
         r"(?:\/(channel)\/([%\w\d_\-]+)(\/.*)?)",
         r"(?:\/(u)\/([%\d\w_\-]+)(\/.*)?)",
         r"(?:\/(user)\/([%\w\d_\-]+)(\/.*)?)",
         r"(?:\/(\@)([%\d\w_\-\.]+)(\/.*)?)",
-        r"(?:youtube\.com\/(?!\@)(?P<simple_uri>[a-zA-Z0-9_\-]+))"  # Updated pattern for youtube.com/joerogan
+        r"(?:youtube\.com\/(?!\@)(?P<simple_uri>[%\d\w_\-\.]+))"  # Updated pattern for youtube.com/joerogan
     ]
-
     for pattern in patterns:
         regex = re.compile(pattern)
         function_match = regex.search(url)
         if function_match:
             logger.debug("finished regex search, matched: %s", pattern)
             uri_style = function_match.group(1)
-            uri_identifier = function_match.group(2) if uri_style else function_match.group("simple_uri")
-            if uri_style == None:
+            if uri_style not in ["c", "channel", "u", "user", "@"]:
+                uri_identifier = function_match.group("simple_uri")
                 return f'/@{uri_identifier}'  # Prepend '@' for youtube.com/joerogan case
             else:
+                uri_identifier = function_match.group(2)
                 return f'/{uri_style}/{uri_identifier}' if uri_style != '@' else f'/{uri_style}{uri_identifier}'
 
     raise RegexMatchError(
